@@ -1,30 +1,30 @@
 #include <condition_variable>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <queue>
+#include <shared_mutex>
 #include <thread>
 
 namespace threadsafe {
 template <typename T> class Queue {
   std::queue<T> TheQueue;
   std::condition_variable CV;
-  std::mutex TheMutex;
+  std::shared_mutex TheMutex;
 
 public:
   Queue() = default;
   Queue(const Queue &Other) {
-    std::lock_guard Lock(Other.TheMutex);
+    std::shared_lock Lock(Other.TheMutex);
     TheQueue = Other.TheQueue;
   }
 
   auto size() const {
-    std::lock_guard Lock(TheMutex);
+    std::shared_lock Lock(TheMutex);
     return std::size(TheQueue);
   }
 
   bool empty() const {
-    std::lock_guard Lock(TheMutex);
+    std::shared_lock Lock(TheMutex);
     return std::empty(TheQueue);
   }
 
