@@ -5,6 +5,8 @@
 #include <shared_mutex>
 #include <thread>
 
+#include "Vector.h"
+
 namespace threadsafe {
 template <typename T> class Queue {
   std::queue<T> TheQueue;
@@ -69,4 +71,4 @@ public:
 };
 } // namespace threadsafe
 
-int main() {}
+int main() { threadsafe::Vector<int> V; }
