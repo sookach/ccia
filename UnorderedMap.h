@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Types.h"
+
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
@@ -11,17 +13,8 @@ template <typename Key, typename T, typename Hash = std::hash<Key>,
 class UnorderedMap {
   using BaseTy = std::unordered_map<Key, T, Hash, Pred, Alloc>;
   BaseTy Raw;
-#if __cplusplus >= 201703L
-  using MutexTy = std::shared_mutex;
-  using ReadLockTy = std::shared_lock<MutexTy>;
-  using WriteLockTy = std::lock_guard<MutexTy>;
-#else
-  using MutexTy = std::mutex;
-  using ReadLockTy = std::unique_lock<MutexTy>;
-  using WriteLockTy = std::unique_lock<MutexTy>;
-#endif
 
-  MutexTy TheMutex;
+  SharedMutexTy TheMutex;
 
 public:
   using key_type = BaseTy::key_type;

@@ -5,7 +5,9 @@
 #include <shared_mutex>
 #include <thread>
 
+#include "UnorderedMap.h"
 #include "Vector.h"
+#include "Array.h"
 
 namespace threadsafe {
 template <typename T> class Queue {
