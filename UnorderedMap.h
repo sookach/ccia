@@ -11,7 +11,17 @@ template <typename Key, typename T, typename Hash = std::hash<Key>,
 class UnorderedMap {
   using BaseTy = std::unordered_map<Key, T, Hash, Pred, Alloc>;
   BaseTy Raw;
-  std::shared_mutex TheMutex;
+#if __cplusplus >= 201703L
+  using MutexTy = std::shared_mutex;
+  using ReadLockTy = std::shared_lock<MutexTy>;
+  using WriteLockTy = std::lock_guard<MutexTy>;
+#else
+  using MutexTy = std::mutex;
+  using ReadLockTy = std::unique_lock<MutexTy>;
+  using WriteLockTy = std::unique_lock<MutexTy>;
+#endif
+
+  MutexTy TheMutex;
 
 public:
   using key_type = BaseTy::key_type;
@@ -63,12 +73,12 @@ public:
   explicit UnorderedMap(const allocator_type &A) : Raw(A) {}
 
   UnorderedMap(const UnorderedMap &Other) {
-    std::shared_lock Lock(Other.TheMutex);
+    ReadLockTy Lock(Other.TheMutex);
     Raw = Other.Raw;
   }
 
   UnorderedMap(const UnorderedMap &Other, const allocator_type &A) {
-    std::shared_lock Lock(Other.TheMutex);
+    ReadLockTy Lock(Other.TheMutex);
     Raw = BaseTy(Other.Raw, A);
   }
 
@@ -133,8 +143,8 @@ public:
     if (this == &Other)
       return *this;
 
-    std::unique_lock Lock1(TheMutex, std::defer_lock);
-    std::shared_lock Lock2(Other.TheMutex, std::defer_lock);
+    WriteLockTy Lock1(TheMutex, std::defer_lock);
+    ReadLockTy Lock2(Other.TheMutex, std::defer_lock);
     std::lock(Lock1, Lock2);
     Raw = Other.Raw;
     return *this;
@@ -148,7 +158,13 @@ public:
     if (this == &Other)
       return *this;
 
+#if __cplusplus >= 201703L
     std::scoped_lock Lock(TheMutex, Other.TheMutex);
+#else
+    WriteLockTy Lock1(TheMutex, std::defer_lock);
+    ReadLockTy Lock2(Other.TheMutex, std::defer_lock);
+    std::lock(Lock1, Lock2);
+#endif
     Raw = std::move(Other.Raw);
     return *this;
   }
@@ -162,47 +178,47 @@ public:
   allocator_type get_allocator() const noexcept { return Raw.get_allocator(); }
 
   bool empty() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.empty();
   }
 
   size_type size() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.size();
   }
 
   size_type max_size() const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.max_size();
   }
 
   iterator begin() noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.begin();
   }
 
   iterator end() noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.end();
   }
 
   const_iterator begin() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.begin();
   }
 
   const_iterator end() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.end();
   }
 
   const_iterator cbegin() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.cbegin();
   }
 
   const_iterator cend() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.cend();
   }
 
@@ -212,7 +228,6 @@ public:
   }
 
   template <typename... Args>
-
   iterator emplace_hint(const_iterator Position, Args &&...A) {
     std::lock_guard Lock(TheMutex);
     return Raw.emplace_hint(Position, std::forward<Args>(A)...);
@@ -389,33 +404,33 @@ public:
   }
 
   hasher hash_function() const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.hash_function();
   }
 
   key_equal key_eq() const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.key_eq();
   }
 
   iterator find(const key_type &K) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.find(K);
   }
 
   const_iterator find(const key_type &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.find(K);
   }
 
 #if __cplusplus >= 202000L
   template <typename K> iterator find(const K &X) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.find(X);
   }
 
   template <typename K> const_iterator find(const K &X) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.find(X);
   }
 #endif
@@ -427,42 +442,42 @@ public:
 
 #if __cplusplus >= 202000L
   template <typename KeyTy> size_type count(const KeyTy &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.count(K);
   }
 
   bool contains(const key_type &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.contains(K);
   }
 
   template <typename KeyTy> bool contains(const KeyTy &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.contains(K);
   }
 #endif
 
   std::pair<iterator, iterator> equal_range(const key_type &K) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.equal_range(K);
   };
 
   std::pair<const_iterator, const_iterator>
   equal_range(const key_type &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.equal_range(K);
   }
 
 #if __cplusplus >= 202000L
   template <typename KeyTy>
   std::pair<iterator, iterator> equal_range(const KeyTy &K) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.equal_range(K);
   }
 
   template <typename KeyTy>
   std::pair<const_iterator, const_iterator> equal_range(const KeyTy &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.equal_range(K);
   }
 #endif
@@ -478,72 +493,72 @@ public:
   }
 
   mapped_type &at(const key_type &K) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.at(K);
   }
 
   const mapped_type &at(const key_type &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.at(K);
   }
 
   size_type bucket_count() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.bucket_count();
   }
 
   size_type max_bucket_count() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.max_bucket_count();
   }
 
   size_type bucket_size(size_type N) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.bucket_size(N);
   }
 
   size_type bucket(const key_type &K) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.bucket(K);
   }
 
   local_iterator begin(size_type N) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.begin(N);
   }
 
   local_iterator end(size_type N) {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.end(N);
   }
 
   const_local_iterator begin(size_type N) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.begin(N);
   }
 
   const_local_iterator end(size_type N) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.end(N);
   }
 
   const_local_iterator cbegin(size_type N) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.cbegin(N);
   }
 
   const_local_iterator cend(size_type N) const {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.cend(N);
   }
 
   float load_factor() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.load_factor();
   }
 
   float max_load_factor() const noexcept {
-    std::shared_lock Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     return Raw.max_load_factor();
   }
 
@@ -618,7 +633,6 @@ UnorderedMap(std::initializer_list<std::pair<Key, T>>,
     -> UnorderedMap<Key, T, Hash, std::equal_to<Key>, Alloc>;
 
 #if __cplusplus >= 202300L
-
 template <std::ranges::input_range R,
           class Hash = std::hash<std::__range_key_type<R>>,
           class Pred = std::equal_to<std::__range_key_type<R>>,
