@@ -14,7 +14,7 @@ class UnorderedMap {
   using BaseTy = std::unordered_map<Key, T, Hash, Pred, Alloc>;
   BaseTy Raw;
 
-  SharedMutexTy TheMutex;
+  mutable SharedMutexTy TheMutex;
 
 public:
   using key_type = BaseTy::key_type;

@@ -10,17 +10,17 @@ template <typename T, std::size_t N> struct Array {
   BaseTy Raw;
 
 public:
-  using value_type = T;
-  using pointer = T *;
-  using const_pointer = const T *;
-  using reference = T &;
-  using const_reference = const T &;
-  using size_type = size_t;
-  using difference_type = ptrdiff_t;
-  using iterator = implementation - defined;
-  using const_iterator = implementation - defined;
-  using reverse_iterator = std::reverse_iterator<iterator>;
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using value_type = BaseTy::value_type;
+  using pointer = BaseTy::pointer;
+  using const_pointer = BaseTy::const_pointer;
+  using reference = BaseTy::reference;
+  using const_reference = BaseTy::const_reference;
+  using size_type = BaseTy::size_type;
+  using difference_type = BaseTy::difference_type;
+  using iterator = BaseTy::iterator;
+  using const_iterator = BaseTy::const_iterator;
+  using reverse_iterator = BaseTy::reverse_iterator;
+  using const_reverse_iterator = BaseTy::const_reverse_iterator;
 
   THREADSAFE_CONSTEXPR_20
   void fill(const T &U) { Raw.fill(U); }
@@ -82,16 +82,16 @@ public:
 
   THREADSAFE_CONSTEXPR_20 bool empty() const noexcept { return Raw.empty(); }
 
-  THREADSAFE_CONSTEXPR_20 reference operator[](size_type N) { return Raw[N]; }
+  THREADSAFE_CONSTEXPR_20 reference operator[](size_type I) { return Raw[I]; }
 
-  THREADSAFE_CONSTEXPR_20 const_reference operator[](size_type N) const {
-    return Raw[N];
+  THREADSAFE_CONSTEXPR_20 const_reference operator[](size_type I) const {
+    return Raw[I];
   }
 
-  THREADSAFE_CONSTEXPR_20 reference at(size_type N) { return Raw.at(N); }
+  THREADSAFE_CONSTEXPR_20 reference at(size_type I) { return Raw.at(I); }
 
-  THREADSAFE_CONSTEXPR_20 const_reference at(size_type N) const {
-    return Raw.at(N);
+  THREADSAFE_CONSTEXPR_20 const_reference at(size_type I) const {
+    return Raw.at(I);
   }
 
   THREADSAFE_CONSTEXPR_20 reference front() { return Raw.front(); }
