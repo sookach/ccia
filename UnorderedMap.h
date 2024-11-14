@@ -563,4 +563,91 @@ public:
   }
 };
 
+#if __cplusplus >= 201703L
+template <class InputIt, class Hash = std::hash<std::__iter_key_type<InputIt>>,
+          class Pred = std::equal_to<std::__iter_key_type<InputIt>>,
+          class Alloc = std::allocator<std::__iter_key_type<InputIt>>>
+UnorderedMap(InputIt, InputIt,
+             typename std::allocator_traits<Alloc>::size_type = 0,
+             Hash = Hash(), Pred = Pred(), Alloc = Alloc())
+    -> UnorderedMap<std::__iter_key_type<InputIt>,
+                    std::__iter_mapped_type<InputIt>, Hash, Pred, Alloc>;
+
+template <class Key, class T, class Hash = std::hash<Key>,
+          class Pred = std::equal_to<Key>,
+          class Alloc = std::allocator<std::pair<const Key, T>>>
+UnorderedMap(std::initializer_list<std::pair<Key, T>>,
+             typename std::allocator_traits<Alloc>::size_type = 0,
+             Hash = Hash(), Pred = Pred(), Alloc = Alloc())
+    -> UnorderedMap<Key, T, Hash, Pred, Alloc>;
+
+template <class InputIt, class Alloc>
+UnorderedMap(InputIt, InputIt, typename std::allocator_traits<Alloc>::size_type,
+             Alloc)
+    -> UnorderedMap<std::__iter_key_type<InputIt>,
+                    std::__iter_mapped_type<InputIt>,
+                    std::hash<std::__iter_key_type<InputIt>>,
+                    std::equal_to<std::__iter_key_type<InputIt>>, Alloc>;
+
+template <class InputIt, class Alloc>
+UnorderedMap(InputIt, InputIt, Alloc)
+    -> UnorderedMap<std::__iter_key_type<InputIt>,
+                    std::__iter_mapped_type<InputIt>,
+                    std::hash<std::__iter_key_type<InputIt>>,
+                    std::equal_to<std::__iter_key_type<InputIt>>, Alloc>;
+
+template <class InputIt, class Hash, class Alloc>
+UnorderedMap(InputIt, InputIt, typename std::allocator_traits<Alloc>::size_type,
+             Hash, Alloc)
+    -> UnorderedMap<std::__iter_key_type<InputIt>,
+                    std::__iter_mapped_type<InputIt>, Hash,
+                    std::equal_to<std::__iter_key_type<InputIt>>, Alloc>;
+
+template <class Key, class T, typename Alloc>
+UnorderedMap(std::initializer_list<std::pair<Key, T>>,
+             typename std::allocator_traits<Alloc>::size_type, Alloc)
+    -> UnorderedMap<Key, T, std::hash<Key>, std::equal_to<Key>, Alloc>;
+
+template <class Key, class T, typename Alloc>
+UnorderedMap(std::initializer_list<std::pair<Key, T>>, Alloc)
+    -> UnorderedMap<Key, T, std::hash<Key>, std::equal_to<Key>, Alloc>;
+
+template <class Key, class T, class Hash, class Alloc>
+UnorderedMap(std::initializer_list<std::pair<Key, T>>,
+             typename std::allocator_traits<Alloc>::size_type, Hash, Alloc)
+    -> UnorderedMap<Key, T, Hash, std::equal_to<Key>, Alloc>;
+
+#if __cplusplus >= 202300L
+
+template <std::ranges::input_range R,
+          class Hash = std::hash<std::__range_key_type<R>>,
+          class Pred = std::equal_to<std::__range_key_type<R>>,
+          class Alloc = std::allocator<std::__range_to_alloc_type<R>>>
+UnorderedMap(std::from_range_t, R &&,
+             typename std::allocator_traits<Alloc>::size_type = 0,
+             Hash = Hash(), Pred = Pred(), Alloc = Alloc())
+    -> UnorderedMap<std::__range_key_type<R>, std::__range_mapped_type<R>, Hash,
+                    Pred, Alloc>;
+
+template <std::ranges::input_range R, class Alloc>
+UnorderedMap(std::from_range_t, R &&,
+             typename std::allocator_traits<Alloc>::size_type, Alloc)
+    -> UnorderedMap<std::__range_key_type<R>, std::__range_mapped_type<R>,
+                    std::hash<std::__range_key_type<R>>,
+                    std::equal_to<std::__range_key_type<R>>, Alloc>;
+
+template <std::ranges::input_range R, class Alloc>
+UnorderedMap(std::from_range_t, R &&, Alloc)
+    -> UnorderedMap<std::__range_key_type<R>, std::__range_mapped_type<R>,
+                    std::hash<std::__range_key_type<R>>,
+                    std::equal_to<std::__range_key_type<R>>, Alloc>;
+
+template <std::ranges::input_range R, class Hash, class Alloc>
+UnorderedMap(std::from_range_t, R &&,
+             typename std::allocator_traits<Alloc>::size_type, Hash, Alloc)
+    -> UnorderedMap<std::__range_key_type<R>, std::__range_mapped_type<R>, Hash,
+                    std::equal_to<std::__range_key_type<R>>, Alloc>;
+
+#endif
+#endif
 } // namespace threadsafe
