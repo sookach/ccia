@@ -556,7 +556,7 @@ public:
   }
 
   void max_load_factor(float Z) {
-    std::lock_guard Lock(TheMutex);
+    ReadLockTy Lock(TheMutex);
     Raw.max_load_factor(Z);
   }
 
